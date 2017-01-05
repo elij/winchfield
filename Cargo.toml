@@ -1,0 +1,7 @@
+[package]
+name = "winchfield"
+version = "0.1.0"
+authors = ["Elijah Charles <elij@lypy.com>"]
+
+[dependencies]
+nom = "^2.0"
