@@ -16,13 +16,13 @@ macro_rules! cap(
 );
 
 named!(pub parse_field<&str, Option<&str> >,
-       do_parse!(tag!("|") >> x: cap!(opt!(cap!(alt!(is_not!("|\r\n"))))) >> (x)));
+       do_parse!(tag!("|") >> x: cap!(opt!(cap!(is_not!("|\r\n")))) >> (x)));
 named!(pub parse_fields<&str, Vec<Option<&str> > >, many1!(parse_field));
 named!(pub parse_segment<&str, (&str, Vec<Option<&str>>)>,
        do_parse!(
            name: is_not!("|") >>
            fields: parse_fields >>
-           cap!(opt!(multispace)) >>
+           cap!(opt!(complete!(multispace))) >>
                (name, fields)
        ));
 named!(pub parse_segments<&str, Vec<(&str, Vec<Option<&str>>)> >, many1!(parse_segment));
