@@ -1,7 +1,6 @@
-use nom::{IResult,multispace};
+use nom::multispace;
 
 /// Captures macro result to aid type inference (alt, opt etc.)
-#[macro_export]
 macro_rules! cap(
   ($i:expr, $submac:ident!( $($args:tt)* )) => (
       {
@@ -15,22 +14,30 @@ macro_rules! cap(
   );
 );
 
-pub fn parse_field( i: &str ) -> IResult<&str, Option<&str>, u32> {
-    do_parse!(i, tag!("|") >> x: cap!(opt!(cap!(is_not!("|\r")))) >> (x))
-}
+macro_rules! parse_field(
+    ($i:expr, $sa:tt) => (
+        do_parse!($i, tag!($sa) >> x: cap!(opt!(cap!(
+            is_not!(&("\r".to_string() + $sa))
+        ))) >> (x))
+    );
+);
 
-pub fn parse_fields( i: &str ) -> IResult<&str, Vec<Option<&str> >, u32> {
-    many1!(i, parse_field)
-}
+macro_rules! parse_fields(
+    ($i:expr, $sa:tt) => (
+        many1!($i, parse_field!($sa))
+    );
+);
 
-pub fn parse_segment( i: &str ) -> IResult<&str, (&str, Vec<Option<&str>>), u32> {
-    do_parse!(i,
-           name: take!(3) >>
-           fields: parse_fields >>
-           cap!(opt!(complete!(multispace))) >>
-               (name, fields)
-    )
-}
+macro_rules! parse_segment(
+    ($i:expr, $sa:tt) => (
+        do_parse!($i,
+            name: take!(3) >>
+                fields: parse_fields!($sa) >>
+                cap!(opt!(complete!(multispace))) >>
+                (name, fields)
+        )
+    );
+);
 
 named!(pub parse_segments<&str, Vec<(&str, Vec<Option<&str>>)> >,
        do_parse!(
@@ -41,12 +48,11 @@ named!(pub parse_segments<&str, Vec<(&str, Vec<Option<&str>>)> >,
                    rep: take!(1) >>
                    esc: take!(1) >>
                    sub: take!(1) >>
-//               fields: parse_fields(is_not!(sep), is_not!(com), is_not!(rep), is_not!(esc), is_not!(sub)) >>
-               fields: parse_fields >>
+               fields: parse_fields!(sep) >>//, is_not!(com), is_not!(rep), is_not!(esc), is_not!(sub)) >>
                multispace >>
                    (name, fields, (sep, com, rep, esc, sub))
            ) >>
-           t: many1!(parse_segment) >>
+           t: many1!(parse_segment!(((msh.2).0))) >>
                (
                    {let mut x = t;
                     x.insert(0, (msh.0, msh.1));

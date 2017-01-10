@@ -12,7 +12,7 @@ mod tests {
         let x = parse_segments(i_msh);
         let y = x.unwrap().1;
         println!("{:?}", y);
-        assert_eq!(y[0].1[1].unwrap(), "EPICADT");
+        assert_eq!(y[0].1[0].unwrap(), "EPICADT");
     }
 
     #[test]
